@@ -1,9 +1,15 @@
 package database.mahasiswa;
 
 import java.awt.EventQueue;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
+import javax.swing.AbstractButton;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -15,15 +21,16 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
 import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.PreparedStatement;
-import java.sql.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import javax.swing.SwingConstants;
+import java.awt.Color;
 
+@SuppressWarnings("serial")
 public class MenuMahasiswa extends JFrame {
 
 	private JPanel contentPane;
@@ -41,6 +48,7 @@ public class MenuMahasiswa extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
+					UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
 					MenuMahasiswa frame = new MenuMahasiswa();
 					frame.setVisible(true);
 				} catch (Exception e) {
@@ -55,49 +63,67 @@ public class MenuMahasiswa extends JFrame {
 	 */
 	public MenuMahasiswa() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 450, 300);
+		setBounds(100, 100, 520, 430);
 		contentPane = new JPanel();
+		contentPane.setBackground(Color.DARK_GRAY);
+		contentPane.setForeground(Color.BLACK);
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
 		JLabel lblNim = new JLabel("NIM");
-		lblNim.setBounds(10, 11, 46, 14);
+		lblNim.setForeground(Color.WHITE);
+		lblNim.setHorizontalAlignment(SwingConstants.CENTER);
+		lblNim.setFont(new Font("Tahoma", Font.BOLD, 14));
+		lblNim.setBounds(10, 7, 116, 42);
 		contentPane.add(lblNim);
 		
 		JLabel lblNama = new JLabel("NAMA");
-		lblNama.setBounds(10, 36, 46, 14);
+		lblNama.setForeground(Color.WHITE);
+		lblNama.setHorizontalAlignment(SwingConstants.CENTER);
+		lblNama.setFont(new Font("Tahoma", Font.BOLD, 14));
+		lblNama.setBounds(10, 60, 116, 42);
 		contentPane.add(lblNama);
 		
 		JLabel lblJurusan = new JLabel("JURUSAN");
-		lblJurusan.setBounds(10, 61, 46, 14);
+		lblJurusan.setForeground(Color.WHITE);
+		lblJurusan.setHorizontalAlignment(SwingConstants.CENTER);
+		lblJurusan.setFont(new Font("Tahoma", Font.BOLD, 14));
+		lblJurusan.setBounds(10, 113, 116, 50);
 		contentPane.add(lblJurusan);
 		
 		JLabel lblAlamat = new JLabel("ALAMAT");
-		lblAlamat.setBounds(10, 86, 46, 14);
+		lblAlamat.setForeground(Color.WHITE);
+		lblAlamat.setHorizontalAlignment(SwingConstants.CENTER);
+		lblAlamat.setFont(new Font("Tahoma", Font.BOLD, 14));
+		lblAlamat.setBounds(10, 169, 116, 42);
 		contentPane.add(lblAlamat);
 		
 		txtNIM = new JTextField();
-		txtNIM.setBounds(66, 8, 358, 20);
+		txtNIM.setFont(new Font("Tahoma", Font.PLAIN, 11));
+		txtNIM.setBounds(136, 7, 358, 42);
 		contentPane.add(txtNIM);
 		txtNIM.setColumns(10);
 		
 		txtNama = new JTextField();
-		txtNama.setBounds(66, 33, 358, 20);
+		txtNama.setFont(new Font("Tahoma", Font.PLAIN, 11));
+		txtNama.setBounds(136, 64, 358, 43);
 		contentPane.add(txtNama);
 		txtNama.setColumns(10);
 		
 		JComboBox cbJurusan = new JComboBox();
+		cbJurusan.setEditable(true);
 		cbJurusan.setModel(new DefaultComboBoxModel(new String[] {"TI", "SI", "Ekonomi"}));
-		cbJurusan.setBounds(66, 58, 180, 20);
+		cbJurusan.setBounds(136, 122, 358, 36);
 		contentPane.add(cbJurusan);
 		
 		JTextArea textAlamat = new JTextArea();
-		textAlamat.setBounds(66, 86, 358, 38);
+		textAlamat.setFont(new Font("Monospaced", Font.PLAIN, 13));
+		textAlamat.setBounds(136, 169, 358, 38);
 		contentPane.add(textAlamat);
 		
 		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(66, 135, 358, 92);
+		scrollPane.setBounds(136, 218, 358, 128);
 		contentPane.add(scrollPane);
 		
 		tabelModel = new DefaultTableModel(null,header); 
@@ -105,17 +131,40 @@ public class MenuMahasiswa extends JFrame {
 		tabel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
-				getData();
+				getData(cbJurusan, textAlamat);
 			}
 		});
 		tabel.setModel(tabelModel);
 		scrollPane.setViewportView(tabel);
 		
 		JButton btnDelete = new JButton("DELETE");
-		btnDelete.setBounds(335, 227, 89, 23);
+		btnDelete.setBackground(Color.GRAY);
+		btnDelete.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				try{
+					Connection konek = (Connection) Koneksi.getKoneksi();
+					String query = "DELETE FROM mahasiswa WHERE NIM = ?";
+					PreparedStatement prepare = (PreparedStatement) konek.prepareStatement(query);
+					
+					prepare.setInt(1,Integer.parseInt(txtNIM.getText()));
+					
+					prepare.executeUpdate();
+					JOptionPane.showMessageDialog(null,"Data berhasil dihapus");
+					prepare.close();
+				}catch(Exception ex){
+					JOptionPane.showMessageDialog(null,"Data gagal dihapus");
+					System.out.println(ex);
+				}finally{
+					getDataTable();
+				}
+			}
+		});
+		btnDelete.setBounds(405, 357, 89, 23);
 		contentPane.add(btnDelete);
+		getDataTable();
 		
 		JButton btnUpdate = new JButton("UPDATE");
+		btnUpdate.setBackground(Color.GRAY);
 		btnUpdate.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				String jurusan = "";
@@ -129,14 +178,13 @@ public class MenuMahasiswa extends JFrame {
 					Connection konek = (Connection) Koneksi.getKoneksi();
 					String query = "UPDATE mahasiswa SET Nama = ?, Jurusan = ?, Alamat = ? WHERE NIM = ?";
 					PreparedStatement prepare = (PreparedStatement) konek.prepareStatement(query);
-					
-					prepare.setInt(1,Integer.parseInt(txtNIM.getText()));
-					prepare.setString(2, txtNama.getText());
-					prepare.setString(3, jurusan);
-					prepare.setString(4, textAlamat.getText());
-					
+					prepare.setString(1, txtNama.getText());
+					prepare.setString(2, jurusan);
+					prepare.setString(3, textAlamat.getText());
+					prepare.setInt(4,Integer.parseInt(txtNIM.getText()));
 					prepare.executeUpdate();
 					JOptionPane.showMessageDialog(null,"Data berhasil diupdate");
+					prepare.close();
 				}catch(Exception ex){
 					JOptionPane.showMessageDialog(null,"Data gagal diupdate");
 					System.out.println(ex);
@@ -145,10 +193,11 @@ public class MenuMahasiswa extends JFrame {
 				}
 			}
 		});
-		btnUpdate.setBounds(236, 227, 89, 23);
+		btnUpdate.setBounds(306, 357, 89, 23);
 		contentPane.add(btnUpdate);
 		
 		JButton btnSave = new JButton("SAVE");
+		btnSave.setBackground(Color.GRAY);
 		btnSave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				String jurusan = "";
@@ -178,12 +227,14 @@ public class MenuMahasiswa extends JFrame {
 				}
 			}
 		});
-		btnSave.setBounds(137, 227, 89, 23);
+		btnSave.setBounds(207, 357, 89, 23);
 		contentPane.add(btnSave);
 		getDataTable();
 	}
 	
 	public void getDataTable(){
+		tabelModel.getDataVector().removeAllElements(); 
+		tabelModel.fireTableDataChanged();
 		try{
 			Connection konek = (Connection) Koneksi.getKoneksi();
 			Statement state = konek.createStatement();
@@ -204,7 +255,7 @@ public class MenuMahasiswa extends JFrame {
 		}
 	}
 	
-	public void getData(){
+	public void getData(JComboBox cbJurusan, JTextArea textAlamat){
 		int pilih = tabel.getSelectedRow();
 		if(pilih == -1){
 			return; 
